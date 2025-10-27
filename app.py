@@ -4,8 +4,9 @@ Main Flask application using the foundation package for auth, clients, and UI te
 """
 
 import os
-from flask import Flask, render_template, redirect, url_for, session, request
+from flask import Flask, render_template, redirect, url_for, session, request, make_response
 from dotenv import load_dotenv
+import secrets
 
 # Load environment variables from .env file
 load_dotenv()
@@ -46,11 +47,32 @@ REDIRECT_URI = os.getenv('REDIRECT_URI', 'http://localhost:5000/auth/callback')
 @app.route('/login')
 def login():
     """Redirect to Microsoft login page"""
-    # Make session permanent so it persists
+    # Generate state manually and store in both session and cookie
+    state = secrets.token_hex(16)
+    session['state'] = state
     session.permanent = True
-    auth_url = auth.get_auth_url(REDIRECT_URI)
-    app.logger.debug(f"Login - Setting state in session: {session.get('state')}")
-    return redirect(auth_url)
+
+    # Build auth URL manually with our state
+    from msal import ConfidentialClientApplication
+    msal_app = ConfidentialClientApplication(
+        os.getenv('MS_CLIENT_ID'),
+        authority=f"https://login.microsoftonline.com/{os.getenv('MS_TENANT_ID')}",
+        client_credential=os.getenv('MS_CLIENT_SECRET')
+    )
+
+    auth_url = msal_app.get_authorization_request_url(
+        scopes=['User.Read', 'offline_access', 'openid', 'profile'],
+        redirect_uri=REDIRECT_URI,
+        state=state
+    )
+
+    app.logger.debug(f"Login - Generated state: {state}")
+
+    # Create response with redirect and set state cookie
+    response = make_response(redirect(auth_url))
+    response.set_cookie('oauth_state', state, secure=True, httponly=True, samesite='Lax', max_age=600)
+
+    return response
 
 
 @app.route('/auth/callback')
@@ -62,14 +84,18 @@ def auth_callback():
         app.logger.error(f"OAuth callback error: {error_msg}")
         return error_msg, 400
 
-    # Verify state to prevent CSRF
+    # Verify state to prevent CSRF - check both session and cookie
     request_state = request.args.get('state')
     session_state = session.get('state')
+    cookie_state = request.cookies.get('oauth_state')
 
-    app.logger.debug(f"Callback - Request state: {request_state}, Session state: {session_state}")
+    app.logger.debug(f"Callback - Request state: {request_state}, Session state: {session_state}, Cookie state: {cookie_state}")
 
-    if request_state != session_state:
-        error_msg = f"Error: State mismatch. Request: {request_state}, Session: {session_state}"
+    # Verify against cookie if session doesn't have it
+    expected_state = session_state or cookie_state
+
+    if request_state != expected_state:
+        error_msg = f"Error: State mismatch. Request: {request_state}, Expected: {expected_state}"
         app.logger.error(error_msg)
         return error_msg, 400
 
@@ -94,7 +120,11 @@ def auth_callback():
 
     app.logger.info(f"User logged in: {session['user'].get('preferred_username')}")
 
-    return redirect(url_for('home'))
+    # Clear the state cookie and redirect to home
+    response = make_response(redirect(url_for('home')))
+    response.set_cookie('oauth_state', '', expires=0)  # Clear the cookie
+
+    return response
 
 
 @app.route('/logout')
