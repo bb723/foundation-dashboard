@@ -163,8 +163,7 @@ def pipeline():
 
     # For now, show a link page
     # Later, can redirect directly: return redirect(pipeline_url)
-    return render_template('dashboard/pipeline_link.html', pipeline_url=pipeline_url)
-
+    return redirect(pipeline_url)
 
 @app.route('/reports')
 @login_required
