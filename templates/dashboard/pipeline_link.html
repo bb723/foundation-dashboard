@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Pipeline{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-diagram-3 display-1 text-primary mb-4"></i>
+                    <h2 class="mb-3">PropertyOps Pipeline</h2>
+                    <p class="lead text-muted mb-4">
+                        The Pipeline application manages scheduled ETL jobs, mailers, and data synchronization.
+                    </p>
+
+                    <div class="row justify-content-center mb-4">
+                        <div class="col-md-8">
+                            <div class="alert alert-info" role="alert">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Separate Application</strong><br>
+                                The pipeline runs as an independent application with its own web interface for monitoring and control.
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{{ pipeline_url }}" class="btn btn-primary btn-lg" target="_blank">
+                        <i class="bi bi-box-arrow-up-right"></i> Open Pipeline Dashboard
+                    </a>
+
+                    <div class="mt-4">
+                        <small class="text-muted">
+                            Pipeline URL: <code>{{ pipeline_url }}</code>
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Info Cards -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-gear-fill text-primary"></i> Scheduled Jobs
+                            </h5>
+                            <p class="card-text">
+                                View and manage automated ETL processes, data syncs, and scheduled tasks.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-play-circle-fill text-success"></i> Manual Execution
+                            </h5>
+                            <p class="card-text">
+                                Manually trigger jobs for testing or emergency data processing needs.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-journal-text text-info"></i> Job Logs
+                            </h5>
+                            <p class="card-text">
+                                Monitor job execution history and view detailed logs for troubleshooting.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-redirect after 3 seconds (optional - uncomment to enable)
+    // setTimeout(function() {
+    //     window.location.href = "{{ pipeline_url }}";
+    // }, 3000);
+</script>
+{% endblock %}

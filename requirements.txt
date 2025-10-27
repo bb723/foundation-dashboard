@@ -1,0 +1,15 @@
+# Foundation package - provides authentication, database clients, and UI templates
+# Use v0.1.0 tag (stable) or @main for latest development version
+git+https://github.com/bb723/foundation.git@v0.1.0
+
+# Flask web framework
+Flask>=3.0.0
+
+# Gunicorn WSGI server for production deployment
+gunicorn>=21.0.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# Additional dependencies for production
+Werkzeug>=3.0.0

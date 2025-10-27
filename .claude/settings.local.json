@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Read(//c/Users/brett/OneDrive/Desktop/projects/propertyops-pipeline/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

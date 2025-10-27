@@ -1,0 +1,15 @@
+# Development requirements - uses latest main branch of foundation
+# Foundation package - provides authentication, database clients, and UI templates
+git+https://github.com/bb723/foundation.git@main
+
+# Flask web framework
+Flask>=3.0.0
+
+# Gunicorn WSGI server for production deployment
+gunicorn>=21.0.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# Additional dependencies for production
+Werkzeug>=3.0.0
