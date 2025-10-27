@@ -24,6 +24,8 @@ app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-
 app.config['SESSION_COOKIE_SECURE'] = True  # Required for HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Security best practice
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allow cookies on redirects from Microsoft
+app.config['SESSION_COOKIE_NAME'] = 'dashboard_session'  # Unique session cookie name
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour session lifetime
 
 # Configure template and static folders to use foundation's assets
 # Foundation package provides base.html, CSS, and JavaScript
@@ -44,7 +46,10 @@ REDIRECT_URI = os.getenv('REDIRECT_URI', 'http://localhost:5000/auth/callback')
 @app.route('/login')
 def login():
     """Redirect to Microsoft login page"""
+    # Make session permanent so it persists
+    session.permanent = True
     auth_url = auth.get_auth_url(REDIRECT_URI)
+    app.logger.debug(f"Login - Setting state in session: {session.get('state')}")
     return redirect(auth_url)
 
 
