@@ -61,7 +61,7 @@ def login():
     )
 
     auth_url = msal_app.get_authorization_request_url(
-        scopes=['User.Read', 'offline_access', 'openid', 'profile'],
+        scopes=['User.Read'],  # Don't include openid, profile, offline_access - MSAL adds them automatically
         redirect_uri=REDIRECT_URI,
         state=state
     )
