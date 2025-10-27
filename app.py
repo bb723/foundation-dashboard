@@ -19,6 +19,12 @@ app = Flask(__name__)
 # Configure Flask app with secret key from environment
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
 
+# Session configuration for OAuth flow
+# These settings ensure session cookies work correctly with Microsoft OAuth redirects
+app.config['SESSION_COOKIE_SECURE'] = True  # Required for HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Security best practice
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allow cookies on redirects from Microsoft
+
 # Configure template and static folders to use foundation's assets
 # Foundation package provides base.html, CSS, and JavaScript
 app.template_folder = 'templates'
@@ -47,26 +53,41 @@ def auth_callback():
     """Handle OAuth callback from Microsoft"""
     # Check for errors in callback
     if 'error' in request.args:
-        return f"Error: {request.args.get('error')} - {request.args.get('error_description')}", 400
+        error_msg = f"Error: {request.args.get('error')} - {request.args.get('error_description')}"
+        app.logger.error(f"OAuth callback error: {error_msg}")
+        return error_msg, 400
 
     # Verify state to prevent CSRF
-    if request.args.get('state') != session.get('state'):
-        return "Error: State mismatch. Possible CSRF attack.", 400
+    request_state = request.args.get('state')
+    session_state = session.get('state')
+
+    app.logger.debug(f"Callback - Request state: {request_state}, Session state: {session_state}")
+
+    if request_state != session_state:
+        error_msg = f"Error: State mismatch. Request: {request_state}, Session: {session_state}"
+        app.logger.error(error_msg)
+        return error_msg, 400
 
     # Get authorization code
     code = request.args.get('code')
     if not code:
+        app.logger.error("No authorization code received in callback")
         return "Error: No authorization code received", 400
 
     # Exchange code for tokens
+    app.logger.debug("Exchanging code for tokens")
     result = auth.get_token_from_code(code, REDIRECT_URI)
 
     if 'error' in result:
-        return f"Error: {result.get('error')} - {result.get('error_description')}", 400
+        error_msg = f"Error: {result.get('error')} - {result.get('error_description')}"
+        app.logger.error(f"Token exchange error: {error_msg}")
+        return error_msg, 400
 
     # Store user info in session
     session['user'] = result.get('id_token_claims')
     session['access_token'] = result.get('access_token')
+
+    app.logger.info(f"User logged in: {session['user'].get('preferred_username')}")
 
     return redirect(url_for('home'))
 
